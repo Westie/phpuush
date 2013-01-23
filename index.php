@@ -40,6 +40,12 @@ $_SEO = $pFunctions->translateRequestURI();
 
 
 /**
+ *	Add a bit of branding - branding is always cool!
+ */
+header("X-Powered-By: phpuush");
+
+
+/**
  *	Delegate to our controllers
  */
 try
