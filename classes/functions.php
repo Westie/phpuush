@@ -218,4 +218,13 @@ class Functions
 		
 		return $aReturn;
 	}
+	
+	
+	/**
+	 *	Quotes a string ready for safe transmission.
+	 */
+	public function quote($sSource)
+	{
+		return '"'.str_replace('"', '\"', $sSource).'"';
+	}
 }

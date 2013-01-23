@@ -65,13 +65,13 @@ elseif(isset($_SEO[1]))
 		$sRender = file_get_contents($sCacheItem);
 	}
 	
-        header("Cache-Control: public");
-        header("Last-Modified: ".date("r", filemtime($sCacheItem)));
+	header("Cache-Control: public");
+	header("Last-Modified: ".date("r", filemtime($sCacheItem)));
 	header("Content-Length: ".filesize($sCacheItem));
-        header("Content-Type: text/html");
-        header("Content-Transfer-Encoding: binary");
-        header("Content-MD5: ".md5_file($sCacheItem));
-        header("Content-Disposition: inline; filename='{$pUpload->file_name}'");
+	header("Content-Type: text/html");
+	header("Content-Transfer-Encoding: binary");
+	header("Content-MD5: ".md5_file($sCacheItem));
+	header("Content-Disposition: inline; filename=".$pFunctions->quote($pUpload->file_name));
 	
 	echo $sRender;
 }
@@ -83,7 +83,7 @@ else
 	header("Content-Type: {$pUpload->mime_type}");
 	header("Content-Transfer-Encoding: binary");
 	header("Content-MD5: {$pUpload->file_hash}");
-	header("Content-Disposition: inline; filename='{$pUpload->file_name}'");
+	header("Content-Disposition: inline; filename=".$pFunctions->quote($pUpload->file_name));
 	
 	$rPointer = $pUpload->getFile();
 	$sContents = "";
