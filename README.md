@@ -45,16 +45,38 @@ Oh, so you actually want this thing to be live, eh? Well, what you need to do is
 
 I'll add examples when I can be bothered.
 
-## Setting up your client
+## Setting up your client on Windows - r85
 
-I've no idea how to set up the OS X client yet, it seems to be hidden somewhere in the app.
-
-If you're a Windows luser though, just edit `%AppData%\puush\puush.ini` to resemble something like this:
+You just edit `%AppData%\puush\puush.ini` to resemble something like this:
 
     ProxyServer = someproxy
     ProxyPort = someport
 
-And then restart puush. You might need to register by going to:
+And then restart puush.
+
+## Setting up your client on OS X - r62
+
+Only attempt this if you're experienced with how to hexedit binaries and such. You will need to create a SSL certificate (self signed is fine) though.
+
+### Choosing the domain to point to
+
+Because the current puush build for OS X lacks support for proxies, you're going to have to edit your hosts file and binary. First, we'll add an entry to `/private/etc/hosts`:
+
+    <address> phpuushd
+
+You may wonder why I choose `phpuushd` - it's because it's the same length as `puush.me` - and since I can't be fucked to use a proper reseditor (you know, programs that when you change the length of strings the binaries aren't fucked) I require a string that's going to be unique.
+
+The next stage is to either hexedit the file (replacing `https://puush.me/` with `https://phpuushd/`) or by replacing `puush.app/Contents/MacOS/puush` with `/setup/binaries/OS X/puush`. The original binary is included in the repo because of reasons.
+
+Also, I don't know if the client supports non-SSL connections (need to test this!), so you'll need to make sure your server supports SSL (if not, use Pound) and set the certificate to be `phpuush.pem`, wherever you stick it.
+
+You also need to install `phpuush.der` to the Keychain. Go to Applications -> Utilities and you'll find Keychain Manager - you can add certificates from there.
+
+If you really desire, you can build your own certificate. I've included the script I use to create my certificates.
+
+## Using the client
+
+You will need to register by going to:
 
 `http://someproxy:someport/page/register`
 
