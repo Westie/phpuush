@@ -60,19 +60,17 @@ Only attempt this if you're experienced with how to hexedit binaries and such. Y
 
 ### Choosing the domain to point to
 
-Because the current puush build for OS X lacks support for proxies, you're going to have to edit your hosts file and binary. First, we'll add an entry to `/private/etc/hosts`:
+Thankfully I managed to negate the need for a SSL certificate. This has just made the task from extremely hard to relatively easy.
 
-    <address> phpuushd
+First thing you have to do is add this to the `/private/etc/hosts` file:
 
-You may wonder why I choose `phpuushd` - it's because it's the same length as `puush.me` - and since I can't be fucked to use a proper reseditor (you know, programs that when you change the length of strings the binaries aren't fucked) I require a string that's going to be unique.
+    <address> phpuushed
 
-The next stage is to either hexedit the file (replacing `https://puush.me/` with `https://phpuushd/`) or by replacing `puush.app/Contents/MacOS/puush` with `/setup/binaries/OS X/puush`. The original binary is included in the repo because of reasons.
+Then, you replace your puush binary with the one in the repo. You can find this in
+`setup/binaries/OS X/puush` - you need to replace the binary in
+`puush.app/Contents/MacOS/puush` with the one on this repo.
 
-Also, I don't know if the client supports non-SSL connections (need to test this!), so you'll need to make sure your server supports SSL (if not, use Pound) and set the certificate to be `phpuush.pem`, wherever you stick it.
-
-You also need to install `phpuush.der` to the Keychain. Go to Applications -> Utilities and you'll find Keychain Manager - you can add certificates from there.
-
-If you really desire, you can build your own certificate. I've included the script I use to create my certificates.
+The only change is that I've changed `https://puush.me/` to `http://phpuushed/`.
 
 ## Using the client
 

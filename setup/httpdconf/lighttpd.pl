@@ -15,3 +15,8 @@ $HTTP["host"] == "puu.sh" {
 	server.document-root = "/path/to/phpuush"
 	url.rewrite-once = (".*" => "index.php")
 }
+
+$HTTP["host"] == "phpuushed" {
+	server.document-root = "/path/to/phpuush"
+	url.rewrite-once = (".*" => "index.php")
+}
