@@ -1,0 +1,23 @@
+Server {
+	Port = 80
+	
+	SourceRoot = /www-data/phpuush
+	DefaultDocument = index.php
+	
+	MaxPostSize = 64
+}
+
+
+VirtualHost {
+	server {
+		Pattern = .*
+
+		RewriteRules {
+		  * {
+				pattern = .*
+				to = index.php
+				qsa = true
+			}
+		}
+	}
+}
