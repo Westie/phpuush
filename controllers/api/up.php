@@ -61,11 +61,14 @@ if($sExtension)
 	$sFileLocation .= ".".$sExtension;
 }
 
-$sHash = md5_file($aFileReference["tmp_name"]);
-
-if($sHash != $_REQUEST["c"])
+if(!empty($_REQUEST["c"]))
 {
-	throw new Exception("Invalid hash comparison");
+	$sHash = md5_file($aFileReference["tmp_name"]);
+	
+	if($sHash != $_REQUEST["c"])
+	{
+		throw new Exception("Invalid hash comparison");
+	}
 }
 
 if(!is_dir("{$sTargetDirectory}/{$sTargetScope}"))
