@@ -30,7 +30,7 @@
  */
 
 
-$pFunctions->requireRequest("k", "c", "z");
+$pFunctions->requireRequest("k", "z");
 
 $pUser = new User();
 $pUpload = new Upload();
