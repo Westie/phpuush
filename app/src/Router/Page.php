@@ -26,11 +26,6 @@ class Page
      */
     public function register(Request $request, Response $response, array $arguments): Response
     {
-        $this->container->get(UserRepository::class)->createUser([
-            'email_address' => uniqid().'@westie.sh',
-            'password' => 'asd123',
-        ]);
-
         return $response;
     }
 }
