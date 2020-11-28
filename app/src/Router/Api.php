@@ -8,10 +8,13 @@ use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Interfaces\RouteCollectorProxyInterface;
+use Slim\Psr7\Stream;
 
 class Api
 {
     private $container;
+    private $fileRepository;
+    private $userRepository;
 
     /**
      *  Called when connecting an app to this controller provider
@@ -25,6 +28,9 @@ class Api
         $app->any('/thumb', [ $this, 'thumb' ]);
 
         $this->container = $app->getContainer();
+
+        $this->userRepository = $this->container->get(UserRepository::class);
+        $this->fileRepository = $this->container->get(FileRepository::class);
     }
 
     /**
@@ -44,18 +50,14 @@ class Api
     public function auth(Request $request, Response $response, array $arguments): Response
     {
         $post = $request->getParsedBody();
-
-        $userRepository = $this->container->get(UserRepository::class);
-        $fileRepository = $this->container->get(FileRepository::class);
-
-        $user = $userRepository->getUserByCredentials($post['e'], $post['p']);
+        $user = $this->userRepository->getUserByCredentials($post['e'], $post['p']);
 
         // write some weird data
         $response->getBody()->write(implode(',', [
             1,
             $user['api_key'],
             '',
-            $fileRepository->getFileSizeForUser($user['rowid']),
+            $this->fileRepository->getFileSizeForUser($user['rowid']),
         ]) . PHP_EOL);
 
         return $response;
@@ -71,7 +73,7 @@ class Api
      *      + f = file
      *
      *   - Response (upload, success):
-     *      > 0,{http://pointer/url},{id},{size}
+     *      > 1,{http://pointer/url},{id},{size}
      *
      *   - Response (failure):
      *      > -1
@@ -80,9 +82,7 @@ class Api
     {
         $post = $request->getParsedBody();
         $files = $request->getUploadedFiles();
-
-        $userRepository = $this->container->get(UserRepository::class);
-        $user = $userRepository->getUserByKey($post['k']);
+        $user = $this->userRepository->getUserByKey($post['k']);
 
         if (!file_exists($user['storage_path'])) {
             mkdir($user['storage_path'], 0777, true);
@@ -99,7 +99,7 @@ class Api
         $files['f']->moveTo($filePath);
 
         // add our file
-        $file = $this->container->get(FileRepository::class)->createFile([
+        $file = $this->fileRepository->createFile([
             'users_id' => $user['rowid'],
             'file_name' => $files['f']->getClientFilename(),
             'file_location' => $user['storage_folder'] . '/' . $fileName,
@@ -112,7 +112,7 @@ class Api
 
         // output feed
         $response->getBody()->write(implode(',', [
-            0,
+            1,
             $file['file_url'],
             $file['rowid'],
             $file['file_size'],
@@ -140,22 +140,20 @@ class Api
     {
         $post = $request->getParsedBody();
 
-        $userRepository = $this->container->get(UserRepository::class);
-        $fileRepository = $this->container->get(FileRepository::class);
+        $user = $this->userRepository->getUserByKey($post['k']);
+        $file = $this->fileRepository->getFileById((int) $post['i']);
 
-        $user = $userRepository->getUserByKey($post['k']);
-
-        if (!$fileRepository->isFileOwnedByUser((int) $post['i'], (int) $user['rowid'])) {
+        if ((int) $file['users_id'] !== (int) $user['rowid']) {
             throw new Exception();
         }
 
         // delete file
-        $fileRepository->deleteFile((int) $post['i']);
+        $this->fileRepository->deleteFile((int) $file['rowid']);
 
         // retrieve history
         $response->getBody()->write('0' . PHP_EOL);
 
-        foreach ($fileRepository->getFilesForUser($user['rowid']) as $file) {
+        foreach ($this->fileRepository->getFilesForUser($user['rowid']) as $file) {
             $response->getBody()->write(implode(',', [
                 $file['rowid'],
                 date('Y-m-d H:i:s', $file['timestamp']),
@@ -185,16 +183,12 @@ class Api
     public function hist(Request $request, Response $response, array $arguments): Response
     {
         $post = $request->getParsedBody();
-
-        $userRepository = $this->container->get(UserRepository::class);
-        $fileRepository = $this->container->get(FileRepository::class);
-
-        $user = $userRepository->getUserByKey($post['k']);
+        $user = $this->userRepository->getUserByKey($post['k']);
 
         // retrieve history
         $response->getBody()->write('0' . PHP_EOL);
 
-        foreach ($fileRepository->getFilesForUser($user['rowid']) as $file) {
+        foreach ($this->fileRepository->getFilesForUser($user['rowid']) as $file) {
             $response->getBody()->write(implode(',', [
                 $file['rowid'],
                 date('Y-m-d H:i:s', $file['timestamp']),
@@ -223,6 +217,79 @@ class Api
      */
     public function thumb(Request $request, Response $response, array $arguments): Response
     {
-        return $response;
+        $post = $request->getParsedBody();
+
+        $user = $this->userRepository->getUserByKey($post['k']);
+        $file = $this->fileRepository->getFileById((int) $post['i']);
+
+        if ((int) $file['users_id'] !== (int) $user['rowid']) {
+            throw new Exception();
+        }
+
+        $image = null;
+        $sourceWidth = null;
+        $sourceHeight = null;
+        $sourceFileType = null;
+        $imageWidth = null;
+        $imageHeight = null;
+
+        // figure out file
+        list($sourceWidth, $sourceHeight, $sourceFileType) = getimagesize($file['file_path']);
+        list($imageWidth, $imageHeight) = getimagesize($file['file_path']);
+
+        if ($sourceFileType === IMAGETYPE_GIF) {
+            $image = imagecreatefromgif($file['file_path']);
+            $transparency = imagecolorallocate($image, 255, 255, 255);
+            imagecolortransparent($image, $transparency);
+        } elseif ($sourceFileType === IMAGETYPE_JPEG) {
+            $image = imagecreatefromjpeg($file['file_path']);
+        } elseif ($sourceFileType === IMAGETYPE_PNG) {
+            $image = imagecreatefrompng($file['file_path']);
+        } else {
+            throw new Exception();
+        }
+
+        // create thumbnail
+        $thumbBoundaries = [
+            'width' => 100,
+            'height' => 100,
+        ];
+
+        if ($sourceWidth > $thumbBoundaries['width'] || $sourceHeight > $thumbBoundaries['height']) {
+            $scaler = 1;
+
+            if($sourceWidth > $sourceHeight) {
+                $scaler = $thumbBoundaries['width'] / $sourceWidth;
+            } elseif($sourceWidth < $sourceHeight) {
+                $scaler = $thumbBoundaries['height'] / $sourceHeight;
+            }
+
+            $sourceWidth *= $scaler;
+            $sourceHeight *= $scaler;
+        }
+
+        $destination = imagecreatetruecolor($sourceWidth, $sourceHeight);
+
+        imagecopyresampled($destination, $image, 0, 0, 0, 0, $sourceWidth, $sourceHeight, $imageWidth, $imageHeight);
+
+        // save it to file, somewhere
+        $buffer = stream_get_meta_data(tmpfile())['uri'];
+
+        if ($sourceFileType === IMAGETYPE_GIF) {
+            imagegif($destination, $buffer);
+        } elseif ($sourceFileType === IMAGETYPE_JPEG) {
+            imagejpeg($destination, $buffer);
+        } elseif ($sourceFileType === IMAGETYPE_PNG) {
+            imagepng($destination, $buffer);
+        }
+
+        $fp = fopen($buffer, 'r');
+
+        return $response->withStatus(200)
+            ->withHeader('Cache-Control', 'public')
+            ->withHeader('Content-Disposition', 'inline')
+            ->withHeader('Content-Transfer-Encoding', 'binary')
+            ->withHeader('Content-Type', $file['mime_type'])
+            ->withBody(new Stream($fp));
     }
 }
