@@ -11,14 +11,14 @@ use Slim\Psr7\Stream;
 
 class FileRoute
 {
-    private $app;
+    private $container;
 
     /**
      *  Constructor
      */
     public function __construct(App $app)
     {
-        $this->app = $app;
+        $this->container = $app->getContainer();
     }
 
     /**
@@ -26,13 +26,13 @@ class FileRoute
      */
     public function __invoke(Request $request, Response $response, array $args)
     {
-        $fileRepository = $this->app->getContainer()->get(FileRepository::class);
-
-        $file = $fileRepository->getFileByAlias($args['alias']);
+        $file = $this->container->get(FileRepository::class)->getFileByAlias($args['alias']);
 
         if ($request->getHeaderLine('If-None-Match') === $file['file_hash']) {
             return $response->withStatus(304);
         }
+
+        $fp = fopen($file['file_path'], 'r');
 
         return $response->withStatus(200)
             ->withHeader('Cache-Control', 'public')
@@ -42,6 +42,6 @@ class FileRoute
             ->withHeader('Content-Transfer-Encoding', 'binary')
             ->withHeader('Content-Type', $file['mime_type'])
             ->withHeader('ETag', $file['file_hash'])
-            ->withBody(new Stream($file['file_stream']));
+            ->withBody(new Stream($fp));
     }
 }

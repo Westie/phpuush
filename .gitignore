@@ -1,4 +1,5 @@
-app/vendor/
-app/databases/phpuush.db
-app/configuration.php
 .DS_Store
+app/configuration.php
+app/databases/phpuush.db
+app/uploads/
+app/vendor/

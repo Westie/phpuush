@@ -2,22 +2,28 @@
 
 namespace App\Router;
 
+use App\Repository\File as FileRepository;
+use App\Repository\User as UserRepository;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Interfaces\RouteCollectorProxyInterface;
 
 class Api
 {
+    private $container;
+
     /**
      *  Called when connecting an app to this controller provider
      */
     public function __invoke(RouteCollectorProxyInterface $app)
     {
-        $app->get('/auth', [ $this, 'auth' ]);
-        $app->post('/up', [ $this, 'up' ]);
-        $app->get('/del', [ $this, 'del' ]);
-        $app->get('/hist', [ $this, 'hist' ]);
-        $app->get('/thumb', [ $this, 'thumb' ]);
+        $app->any('/auth', [ $this, 'auth' ]);
+        $app->any('/up', [ $this, 'up' ]);
+        $app->any('/del', [ $this, 'del' ]);
+        $app->any('/hist', [ $this, 'hist' ]);
+        $app->any('/thumb', [ $this, 'thumb' ]);
+
+        $this->container = $app->getContainer();
     }
 
     /**
@@ -57,6 +63,45 @@ class Api
      */
     public function up(Request $request, Response $response, array $arguments): Response
     {
+        $post = $request->getParsedBody();
+        $files = $request->getUploadedFiles();
+
+        $user = $this->container->get(UserRepository::class)->getUserByKey($post['k']);
+
+        if (!file_exists($user['storage_path'])) {
+            mkdir($user['storage_path'], 0777, true);
+        }
+
+        if (empty($files['f'])) {
+            throw new Exception();
+        }
+
+        // move file to somewhere locally
+        $fileName = uniqid();
+        $filePath = $user['storage_path'] . '/' . $fileName;
+
+        $files['f']->moveTo($filePath);
+
+        // add our file
+        $file = $this->container->get(FileRepository::class)->createFile([
+            'users_id' => $user['rowid'],
+            'file_name' => $files['f']->getClientFilename(),
+            'file_location' => $user['storage_folder'] . '/' . $fileName,
+            'file_size' => filesize($filePath),
+            'file_hash' => md5_file($filePath),
+            'mime_type' => $files['f']->getClientMediaType(),
+            'timestamp' => time(),
+            'ip_address' => null,
+        ]);
+
+        // output feed
+        $response->getBody()->write(implode(',', [
+            0,
+            $file['file_url'],
+            $file['rowid'],
+            $file['file_size'],
+        ]));
+
         return $response;
     }
 

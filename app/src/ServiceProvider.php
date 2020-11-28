@@ -4,6 +4,7 @@ namespace App;
 
 use App\Configuration\Configuration;
 use App\Repository\File as FileRepository;
+use App\Repository\User as UserRepository;
 use Laminas\Db\Adapter\Adapter;
 use Laminas\Db\Adapter\AdapterInterface;
 use League\Container\ServiceProvider\AbstractServiceProvider;
@@ -17,6 +18,7 @@ class ServiceProvider extends AbstractServiceProvider
         AdapterInterface::class,
         Configuration::class,
         FileRepository::class,
+        UserRepository::class,
     ];
 
     /**
@@ -35,7 +37,17 @@ class ServiceProvider extends AbstractServiceProvider
         });
 
         $container->share(FileRepository::class, function () use (&$container) {
-            return new FileRepository($container->get(AdapterInterface::class));
+            return new FileRepository(
+                $container->get(Configuration::class),
+                $container->get(AdapterInterface::class)
+            );
+        });
+
+        $container->share(UserRepository::class, function () use (&$container) {
+            return new UserRepository(
+                $container->get(Configuration::class),
+                $container->get(AdapterInterface::class)
+            );
         });
     }
 }
