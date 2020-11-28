@@ -32,8 +32,8 @@ $app->any('/', function (Request $request, Response $response, array $arguments)
 
 $app->group('/api', App\Router\Api::class);
 $app->group('/page', App\Router\Page::class);
-$app->any('/{alias:\w*?}', new App\Router\FileRoute($app));
-$app->any('/{alias:\w*?}/{ext}', new App\Router\FormattedFileRoute($app));
+$app->any('/{alias:[\w\.]*?}', new App\Router\FileRoute($app));
+$app->any('/{alias:[\w\.]*?}/{ext}', new App\Router\FormattedFileRoute($app));
 
 $afterMiddleware = function ($request, $handler) {
     try {
