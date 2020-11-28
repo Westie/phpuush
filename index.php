@@ -1,98 +1,47 @@
 <?php
-/**
- *	phpuush service for PHP
- *
- *	@author Blake <blake@totalru.in>
- *	@author PwnFlakes <pwnflak.es>
- *	@author Westie <westie@typefish.co.uk>
- *
- *	@version: 0.1
- */
 
+// set up some constants first, because some of my friends are probably going
+// to be setting this up in a manner that is "security conscious" - moving the
+// app directory outside of this folder and into its parent somewhere
+define('APP_DIR', realpath(__DIR__ . '/app') . '/');
 
-date_default_timezone_set("Europe/London");
+// require composer
+require APP_DIR . 'vendor/autoload.php';
 
+use League\Container\Container;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Factory\AppFactory;
 
-/**
- *	Include our classes
- */
-include "classes/functions.php";
-include "classes/database.php";
-include "classes/element.php";
-include "classes/user.php";
-include "classes/upload.php";
-include "classes/geshi/geshi.php";
+// set up service provider
+$container = new Container();
+$container->addServiceProvider(App\ServiceProvider::class);
 
+// start messing about with slim
+$app = AppFactory::createFromContainer($container);
 
-/**
- *	Include our configuration files
- */
-include "configuration.php";
+$app->get('/dl', function (Request $request, Response $response, array $arguments) {
+	$response->getBody()->write('85');
+	return $response;
+});
 
+$app->group('/api', App\Router\Api::class);
+$app->group('/page', App\Router\Page::class);
 
-/**
- *	Do some defining stuff
- */
-$pFunctions = Functions::getInstance();
-$pDatabase = Database::getInstance();
+$app->any('/{alias:.*}', new App\Router\FileRoute($app));
 
-$_SEO = $pFunctions->translateRequestURI();
+$afterMiddleware = function ($request, $handler) {
+    try {
+        $response = $handler->handle($request);
+    } catch (UnexpectedValueException $exception) {
+        return (new Slim\Psr7\Response())->withStatus(404);
+    } catch (Throwable $exception) {
+        throw $exception;
+        return (new Slim\Psr7\Response())->withStatus(500);
+    }
 
+    return $response;
+};
 
-/**
- *	Add a bit of branding - branding is always cool!
- */
-header("X-Powered-By: phpuush");
-
-
-/**
- *	Delegate to our controllers
- */
-try
-{	
-	if(isset($_SEO[0]))
-	{
-		if($_SEO[0] == "api")
-		{
-			if(file_exists("controllers/api/{$_SEO[1]}.php"))
-			{
-				require "controllers/api/{$_SEO[1]}.php";
-			}
-			else
-			{
-				throw new Exception("API method does not exist.");
-			}
-		}
-		elseif($_SEO[0] == "dl")
-		{
-			return "85";
-		}
-		elseif($_SEO[0] == "page")
-		{
-			if(file_exists("controllers/page/{$_SEO[1]}.php"))
-			{
-				require "controllers/page/{$_SEO[1]}.php";
-			}
-			else
-			{
-				throw new Exception("API method does not exist.");
-			}
-		}
-		else
-		{
-			require "controllers/file-handler.php";
-		}
-	}
-	else
-	{
-		echo "This is a phpuush endpoint.";
-	}
-}
-catch(Exception $pException)
-{
-	echo "-1";
-}
-
-
-$pDatabase->close();
-exit;
+$app->add($afterMiddleware);
+$app->run();

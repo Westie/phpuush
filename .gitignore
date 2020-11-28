@@ -1,2 +1,4 @@
 app/vendor/
+app/databases/phpuush.db
 app/configuration.php
+.DS_Store
