@@ -40,7 +40,6 @@ $afterMiddleware = function ($request, $handler) {
     } catch (UnexpectedValueException $exception) {
         return (new Slim\Psr7\Response())->withStatus(404);
     } catch (Throwable $exception) {
-        dd($exception);
         $response = new Slim\Psr7\Response();
         $response->getBody()->write('-1');
         return $response->withStatus(500);
