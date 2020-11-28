@@ -11,6 +11,7 @@ require APP_DIR . 'vendor/autoload.php';
 use League\Container\Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Factory\AppFactory;
 
 // set up service provider
@@ -38,6 +39,8 @@ $afterMiddleware = function ($request, $handler) {
     try {
         $response = $handler->handle($request);
     } catch (UnexpectedValueException $exception) {
+        return (new Slim\Psr7\Response())->withStatus(404);
+    } catch (HttpNotFoundException $exception) {
         return (new Slim\Psr7\Response())->withStatus(404);
     } catch (Throwable $exception) {
         $response = new Slim\Psr7\Response();
