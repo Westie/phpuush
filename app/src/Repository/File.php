@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Configuration\Configuration;
 use Laminas\Db\Adapter\AdapterInterface;
+use Laminas\Db\Sql\Expression;
 use Laminas\Db\Sql\Sql;
 use Laminas\Db\Sql\Where;
 use UnexpectedValueException;
@@ -80,6 +81,95 @@ class File
         }
 
         return $this->enrich($data);
+    }
+
+    /**
+     *  Get files belonging to a user
+     */
+    public function getFilesForUser(int $userId, int $limit = 10): iterable
+    {
+        $sql = new Sql($this->db);
+
+        $select = $sql->select()
+            ->from('uploads')
+            ->columns([
+                'rowid',
+                '*',
+            ])
+            ->where([
+                'users_id' => $userId,
+                'is_deleted' => false,
+            ])
+            ->order('rowid DESC')
+            ->limit($limit);
+
+        $set = $sql->prepareStatementForSqlObject($select)->execute();
+
+        foreach ($set as $data) {
+            yield $this->enrich($data);
+        }
+    }
+
+    /**
+     *  Get file size for user
+     */
+    public function getFileSizeForUser(int $userId): int
+    {
+        $sql = new Sql($this->db);
+
+        $select = $sql->select()
+            ->from('uploads')
+            ->columns([ 'file_size_sum' => new Expression('SUM(file_size)') ])
+            ->where([
+                'users_id' => $userId,
+                'is_deleted' => false,
+            ])
+            ->limit(1);
+
+        $data = $sql->prepareStatementForSqlObject($select)->execute()->current();
+
+        if (!empty($data['file_size_sum'])) {
+            return (int) $data['file_size_sum'];
+        }
+
+        return 0;
+    }
+
+    /**
+     *  Get file size for user
+     */
+    public function isFileOwnedByUser(int $fileId, int $userId): int
+    {
+        $sql = new Sql($this->db);
+
+        $select = $sql->select()
+            ->from('uploads')
+            ->columns([ 'rowid' ])
+            ->where([
+                'rowid' => $fileId,
+                'users_id' => $userId,
+                'is_deleted' => false,
+            ])
+            ->limit(1);
+
+        $data = $sql->prepareStatementForSqlObject($select)->execute();
+
+        return count($data) > 0;
+    }
+
+    /**
+     *  Delete file
+     */
+    public function deleteFile(int $fileId)
+    {
+        $sql = new Sql($this->db);
+
+        $update = $sql->update()
+            ->table('uploads')
+            ->set([ 'is_deleted' => true ])
+            ->where([ 'rowid' => $fileId ]);
+
+        $sql->prepareStatementForSqlObject($update)->execute();
     }
 
     /**

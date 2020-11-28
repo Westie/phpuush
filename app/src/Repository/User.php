@@ -73,6 +73,36 @@ class User
     }
 
     /**
+     *  Get user by credentials
+     */
+    public function getUserByCredentials(string $email, string $password): array
+    {
+        $sql = new Sql($this->db);
+
+        $select = $sql->select()
+            ->from('users')
+            ->columns([
+                'rowid',
+                '*',
+            ])
+            ->where([
+                'email_address' => $email,
+                'is_deleted' => false,
+            ])
+            ->limit(1);
+
+        $data = $sql->prepareStatementForSqlObject($select)->execute()->current();
+
+        if (!empty($data)) {
+            if (sha1($password) === $data['password']) {
+                return $this->enrich($data);
+            }
+        }
+
+        throw new UnexpectedValueException();
+    }
+
+    /**
      *  Enrich things
      */
     private function enrich(array $data): array

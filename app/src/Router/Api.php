@@ -4,6 +4,7 @@ namespace App\Router;
 
 use App\Repository\File as FileRepository;
 use App\Repository\User as UserRepository;
+use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Interfaces\RouteCollectorProxyInterface;
@@ -17,8 +18,8 @@ class Api
      */
     public function __invoke(RouteCollectorProxyInterface $app)
     {
-        $app->any('/auth', [ $this, 'auth' ]);
-        $app->any('/up', [ $this, 'up' ]);
+        $app->post('/auth', [ $this, 'auth' ]);
+        $app->post('/up', [ $this, 'up' ]);
         $app->any('/del', [ $this, 'del' ]);
         $app->any('/hist', [ $this, 'hist' ]);
         $app->any('/thumb', [ $this, 'thumb' ]);
@@ -32,7 +33,6 @@ class Api
      *   - Request:
      *      + e = email address
      *      + p = password
-     *      + k = api key
      *      + z = poop (what the...)
      *
      *   - Response (authenticated, success):
@@ -43,6 +43,21 @@ class Api
      */
     public function auth(Request $request, Response $response, array $arguments): Response
     {
+        $post = $request->getParsedBody();
+
+        $userRepository = $this->container->get(UserRepository::class);
+        $fileRepository = $this->container->get(FileRepository::class);
+
+        $user = $userRepository->getUserByCredentials($post['e'], $post['p']);
+
+        // write some weird data
+        $response->getBody()->write(implode(',', [
+            1,
+            $user['api_key'],
+            '',
+            $fileRepository->getFileSizeForUser($user['rowid']),
+        ]) . PHP_EOL);
+
         return $response;
     }
 
@@ -66,7 +81,8 @@ class Api
         $post = $request->getParsedBody();
         $files = $request->getUploadedFiles();
 
-        $user = $this->container->get(UserRepository::class)->getUserByKey($post['k']);
+        $userRepository = $this->container->get(UserRepository::class);
+        $user = $userRepository->getUserByKey($post['k']);
 
         if (!file_exists($user['storage_path'])) {
             mkdir($user['storage_path'], 0777, true);
@@ -100,7 +116,7 @@ class Api
             $file['file_url'],
             $file['rowid'],
             $file['file_size'],
-        ]));
+        ]) . PHP_EOL);
 
         return $response;
     }
@@ -122,6 +138,34 @@ class Api
      */
     public function del(Request $request, Response $response, array $arguments): Response
     {
+        $post = $request->getParsedBody();
+
+        $userRepository = $this->container->get(UserRepository::class);
+        $fileRepository = $this->container->get(FileRepository::class);
+
+        $user = $userRepository->getUserByKey($post['k']);
+
+        if (!$fileRepository->isFileOwnedByUser((int) $post['i'], (int) $user['rowid'])) {
+            throw new Exception();
+        }
+
+        // delete file
+        $fileRepository->deleteFile((int) $post['i']);
+
+        // retrieve history
+        $response->getBody()->write('0' . PHP_EOL);
+
+        foreach ($fileRepository->getFilesForUser($user['rowid']) as $file) {
+            $response->getBody()->write(implode(',', [
+                $file['rowid'],
+                date('Y-m-d H:i:s', $file['timestamp']),
+                $file['file_url'],
+                $file['file_name'],
+                $file['views'],
+                1,
+            ]) . PHP_EOL);
+        }
+
         return $response;
     }
 
@@ -140,6 +184,27 @@ class Api
      */
     public function hist(Request $request, Response $response, array $arguments): Response
     {
+        $post = $request->getParsedBody();
+
+        $userRepository = $this->container->get(UserRepository::class);
+        $fileRepository = $this->container->get(FileRepository::class);
+
+        $user = $userRepository->getUserByKey($post['k']);
+
+        // retrieve history
+        $response->getBody()->write('0' . PHP_EOL);
+
+        foreach ($fileRepository->getFilesForUser($user['rowid']) as $file) {
+            $response->getBody()->write(implode(',', [
+                $file['rowid'],
+                date('Y-m-d H:i:s', $file['timestamp']),
+                $file['file_url'],
+                $file['file_name'],
+                $file['views'],
+                1,
+            ]) . PHP_EOL);
+        }
+
         return $response;
     }
 
