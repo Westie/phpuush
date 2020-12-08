@@ -4,6 +4,8 @@ namespace App\Router;
 
 use App\Configuration\Configuration;
 use App\Repository\File as FileRepository;
+use App\Router\Traits\Expiration;
+use DateTime;
 use DomainException;
 use Highlight\Highlighter;
 use HighlightUtilities;
@@ -15,6 +17,8 @@ use Slim\Psr7\Stream;
 
 class FormattedFileRoute
 {
+    use Expiration;
+
     private $container;
 
     /**
@@ -31,6 +35,12 @@ class FormattedFileRoute
     public function __invoke(Request $request, Response $response, array $args)
     {
         $file = $this->container->get(FileRepository::class)->getFileByAlias($args['alias']);
+        $fileExpiry = $this->getExpiry($file);
+
+        if ($fileExpiry < new DateTime()) {
+            return $response->withStatus(404);
+        }
+
         $hash = md5($file['file_hash'] . $args['ext']);
 
         if ($request->getHeaderLine('If-None-Match') === $hash) {
@@ -65,6 +75,7 @@ class FormattedFileRoute
             ->withHeader('Content-Transfer-Encoding', 'binary')
             ->withHeader('Content-Type', 'text/html')
             ->withHeader('ETag', $hash)
+            ->withHeader('Expires', $fileExpiry->format('D, d M Y H:i:s e'))
             ->withBody(new Stream($fp));
     }
 
