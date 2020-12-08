@@ -5,6 +5,7 @@
         }
     },
     "require": {
+        "erusev/parsedown": "^1.7",
         "laminas/laminas-db": "^2.11",
         "league/container": "^3.3",
         "scrivo/highlight.php": "v9.18.1.3",

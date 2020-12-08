@@ -7,8 +7,10 @@ use App\Repository\File as FileRepository;
 use App\Router\Traits\Expiration;
 use DateTime;
 use DomainException;
+use Exception;
 use Highlight\Highlighter;
 use HighlightUtilities;
+use Parsedown;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -48,26 +50,15 @@ class FormattedFileRoute
         }
 
         $code = file_get_contents($file['file_path']);
+        $fp = null;
 
-        $fp = fopen('php://temp', 'rw');
+        $ext = strtolower($args['ext']);
 
-        try {
-            $highlighted = (new Highlighter())->highlight($args['ext'], $code);
-
-            fwrite($fp, '<body style="margin: 0">');
-            fwrite($fp, '<style>' . $this->getStylesheet() . '</style>');
-            fwrite($fp, '<pre><code class="hljs ' . $highlighted->language . '">');
-            fwrite($fp, $highlighted->value);
-            fwrite($fp, '</code></pre>');
-            fwrite($fp, '</body>');
+        if ($ext === 'md') {
+            $fp = $this->usingMarkdown($code);
+        } else {
+            $fp = $this->usingHighlighter($code, $ext);
         }
-        catch (DomainException $e) {
-            fwrite($fp, '<pre><code>');
-            fwrite($fp, htmlentities($code));
-            fwrite($fp, '</code></pre>');
-        }
-
-        rewind($fp);
 
         return $response->withStatus(200)
             ->withHeader('Cache-Control', 'public')
@@ -80,16 +71,69 @@ class FormattedFileRoute
     }
 
     /**
-     *  Get stylesheet
+     *  Turn code to markup
      */
-    private function getStylesheet()
+    private function usingHighlighter(string $code, string $ext)
     {
-        $theme = $this->container->get(Configuration::class)->get('files.theme');
+        $fp = fopen('php://temp', 'rw');
 
-        if (empty($theme)) {
-            $theme = 'vs';
+        try {
+            // get theme
+            $theme = $this->container->get(Configuration::class)->get('files.theme');
+
+            if (empty($theme)) {
+                $theme = 'vs';
+            }
+
+            $stylesheet = HighlightUtilities\getStyleSheet($theme);
+
+            // output markup
+            $highlighted = (new Highlighter())->highlight($ext, $code);
+
+            fwrite($fp, '<body style="margin: 0">');
+            fwrite($fp, '<style>' . $stylesheet . '</style>');
+            fwrite($fp, '<pre><code class="hljs ' . $highlighted->language . '">');
+            fwrite($fp, $highlighted->value);
+            fwrite($fp, '</code></pre>');
+            fwrite($fp, '</body>');
+        } catch (DomainException $e) {
+            fwrite($fp, '<pre><code>');
+            fwrite($fp, htmlentities($code));
+            fwrite($fp, '</code></pre>');
         }
 
-        return HighlightUtilities\getStyleSheet($theme);
+        rewind($fp);
+
+        return $fp;
+    }
+
+    /**
+     *  Turn markdown to HTML
+     */
+    private function usingMarkdown(string $code)
+    {
+        $fp = fopen('php://temp', 'rw');
+
+        try {
+            $parsedown = new Parsedown();
+
+            $stylesheet = file_get_contents(APP_DIR . 'templates/github-markdown.css');
+            $stylesheet = str_replace("\n", '', $stylesheet);
+
+            fwrite($fp, '<body style="max-width: 1000px; margin: auto">');
+            fwrite($fp, '<style>' . $stylesheet . '</style>');
+            fwrite($fp, '<article class="markdown-body">');
+            fwrite($fp, $parsedown->text($code));
+            fwrite($fp, '</article>');
+            fwrite($fp, '</body>');
+        } catch (Exception $e) {
+            fwrite($fp, '<pre><code>');
+            fwrite($fp, htmlentities($code));
+            fwrite($fp, '</code></pre>');
+        }
+
+        rewind($fp);
+
+        return $fp;
     }
 }
