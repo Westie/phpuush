@@ -2,13 +2,15 @@
 
 So, you're probably confused as to what this is. Well, it's a proxy for puush. The developers for puush decided to be all stupid and refused to implement useless features like SFTP and FTP.
 
-So, my absolutely brilliant friend [jannispl](https://github.com/jannispl) decided to write a new [proxy](https://github.com/jannispl/puushproxy) for puush in node.js. This, as far as we know, was the first alternative implementation of puush.
+So, my absolutely brilliant friend [@jannispl](https://github.com/jannispl) decided to write a new [proxy](https://github.com/jannispl/puushproxy) for puush in node.js. This, as far as we know, was the first alternative implementation of puush.
 
 Almost half a decade on, I thought I would improve it to make it better.
 
 ## How do I migrate to the new version?
 
 ### Preamble
+
+Firstly, [install composer](https://getcomposer.org/doc/00-intro.md#installation-linux-unix-macos).
 
 There are three files and folders you'll need to find:
 
@@ -34,4 +36,6 @@ If you are security conscious (like some of my friends) then you can download ma
 
 - `uploads/` can be located anywhere that PHP has write access, however for the purposes of this example, move it to `app/uploads`. You need to update the `files.upload` property with the absolute path to this folder within the config.
 
-Please make sure that your phpuush.db file is not accessible to the outside world. The best thing to do is to make it so that *every* request to that folder is handled by `index.php`. If you can download your `phpuush.db` through your browser you've configured it incorrectly.
+Then, you'll need to run `composer install`
+
+Please make sure that your phpuush.db file is not accessible to the outside world. The best thing to do is to make it so that *every* request to that folder is handled by `index.php`. If you can download your `phpuush.db` or `composer.json` through your browser you've configured it incorrectly.
