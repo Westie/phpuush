@@ -30,7 +30,7 @@ If you are security conscious (like some of my friends) then you can download ma
 
 ### Moving files to new homes
 
-- `configuration.php` **must** be relocated to `/app/configuration.php`. You may notice that the format of the configuration has changed - there is no need to change this as the configuration itself is backwards compatible.
+- `configuration.php` **must** be relocated to `app/configuration.php`. You may notice that the format of the configuration has changed - there is no need to change this as the configuration itself is backwards compatible.
 
 - `databases/phpuush.db` can be located anywhere that PHP has write access, however for the purposes of this example, move it to `app/databases/phpuush-demo.db`. You need to update the `database.sql` property with the absolute path to this file within the config.
 
