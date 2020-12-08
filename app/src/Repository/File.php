@@ -186,6 +186,14 @@ class File
         $data['file_url'] = rtrim($this->config->get('files.domain'), '/') . '/' . $data['alias'];
         $data['file_path'] = rtrim($this->config->get('files.upload'), '/') . '/' . $data['file_location'];
 
+        if ($this->config->get('files.extension')) {
+            $ext = pathinfo($file['file_name'], PATHINFO_EXTENSION);
+
+            if (!empty($ext)) {
+                $data['file_url'] .= '.' . $ext;
+            }
+        }
+
         return $data;
     }
 
