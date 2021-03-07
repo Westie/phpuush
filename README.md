@@ -36,6 +36,6 @@ If you are security conscious (like some of my friends) then you can download ma
 
 - `uploads/` can be located anywhere that PHP has write access, however for the purposes of this example, move it to `app/uploads`. You need to update the `files.upload` property with the absolute path to this folder within the config.
 
-Then, you'll need to run `composer install`
+Then, you'll need to run `composer install --no-dev`
 
 Please make sure that your phpuush.db file is not accessible to the outside world. The best thing to do is to make it so that *every* request to that folder is handled by `index.php`. If you can download your `phpuush.db` or `composer.json` through your browser you've configured it incorrectly.
