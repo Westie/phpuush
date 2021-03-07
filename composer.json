@@ -4,6 +4,10 @@
             "App\\": "app/src"
         }
     },
+    "config": {
+        "sort-packages": true,
+        "vendor-dir": "app/vendor"
+    },
     "require": {
         "erusev/parsedown": "^1.7",
         "laminas/laminas-db": "^2.11",
@@ -14,10 +18,17 @@
         "symfony/yaml": "^5.1"
     },
     "require-dev": {
+        "macfja/phar-builder": "^0.2.8",
         "symfony/var-dumper": "^5.1"
     },
-    "config": {
-        "sort-packages": true,
-        "vendor-dir": "app/vendor"
+    "extra": {
+        "phar-builder": {
+            "compression": "GZip",
+            "name": "phpuush.phar",
+            "output-dir": "./",
+            "entry-point": "./index.php",
+            "include-dev": false,
+            "skip-shebang": true
+        }
     }
 }

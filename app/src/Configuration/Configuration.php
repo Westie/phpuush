@@ -11,23 +11,30 @@ class Configuration
      */
     public function __construct()
     {
-        if (file_exists(APP_DIR . 'configuration.php')) {
-            $this->data = $this->readLegacyConfigurationFile();
+        $files = [
+            APP_DIR . 'configuration.php',
+        ];
+
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                $this->data = $this->readLegacyConfigurationFile($file);
+            }
         }
+
+        return;
     }
 
     /**
      *  Read a legacy config file
      */
-    private function readLegacyConfigurationFile(): array
+    private function readLegacyConfigurationFile(string $fileName): array
     {
-        $data = (function() {
-            $returnedValue = require APP_DIR . 'configuration.php';
+        $data = (function() use ($fileName) {
+            $returnedValue = require $fileName;
 
             if (is_array($returnedValue)) {
                 return $returnedValue;
             }
-
             if (isset($aGlobalConfiguration) && is_array($aGlobalConfiguration)) {
                 return $aGlobalConfiguration;
             }

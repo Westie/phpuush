@@ -3,10 +3,20 @@
 // set up some constants first, because some of my friends are probably going
 // to be setting this up in a manner that is "security conscious" - moving the
 // app directory outside of this folder and into its parent somewhere
-define('APP_DIR', realpath(__DIR__ . '/app') . '/');
+define('PHAR_MODE', class_exists('Phar') && Phar::running());
+
+if (!defined('APP_DIR')) {
+    if (PHAR_MODE) {
+        define('APP_DIR', realpath(getcwd() . '/app') . '/');
+        define('APP_VENDOR_DIR', 'phar://' . basename(__DIR__) . '/app/vendor/');
+    } else {
+        define('APP_DIR', realpath(__DIR__ . '/app') . '/');
+        define('APP_VENDOR_DIR', realpath(APP_DIR . '/vendor') . '/');
+    }
+}
 
 // require composer
-require APP_DIR . 'vendor/autoload.php';
+require APP_VENDOR_DIR . 'autoload.php';
 
 use League\Container\Container;
 use Psr\Http\Message\ResponseInterface as Response;

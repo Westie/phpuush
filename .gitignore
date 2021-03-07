@@ -3,3 +3,4 @@ app/configuration.php
 app/databases/phpuush.db
 app/uploads/
 app/vendor/
+phpuush.phar
