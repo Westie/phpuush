@@ -39,3 +39,15 @@ If you are security conscious (like some of my friends) then you can download ma
 Then, you'll need to run `composer install --no-dev`
 
 Please make sure that your phpuush.db file is not accessible to the outside world. The best thing to do is to make it so that *every* request to that folder is handled by `index.php`. If you can download your `phpuush.db` or `composer.json` through your browser you've configured it incorrectly.
+
+## Bonus: Environment variables
+
+You can completely skip the idea of a boring old configuration file and use environment variables instead! Create `.env` or `app/.env` (or even assigned via your web service) and assign the following:
+
+```
+PHPUUSH_DATABASE=/dsn/or/path-to-sqlite.db
+PHPUUSH_FILES_DOMAIN=http://your-domain
+PHPUUSH_FILES_UPLOAD=/your/upload/path
+```
+
+As long it's accessible by your web service, it'll work.
