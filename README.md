@@ -42,7 +42,7 @@ Please make sure that your phpuush.db file is not accessible to the outside worl
 
 ## Bonus: Environment variables
 
-Create `.env` or `app/.env` (or even assigned via your web service) and assign the following:
+You can completely skip the idea of a boring old configuration file and use environment variables instead! Create `.env` or `app/.env` (or even assigned via your web service) and assign the following:
 
 ```
 PHPUUSH_DATABASE=/dsn/or/path-to-sqlite.db
