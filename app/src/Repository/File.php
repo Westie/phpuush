@@ -7,6 +7,7 @@ use Laminas\Db\Adapter\AdapterInterface;
 use Laminas\Db\Sql\Expression;
 use Laminas\Db\Sql\Sql;
 use Laminas\Db\Sql\Where;
+use RuntimeException;
 use UnexpectedValueException;
 
 class File
@@ -22,6 +23,13 @@ class File
     {
         $this->config = $config;
         $this->db = $db;
+
+        // sanity check to ensure that upload folder exists
+        $uploadFolder = $this->config->get('files.upload');
+
+        if (!file_exists($uploadFolder) || !is_dir($uploadFolder)) {
+            throw new RuntimeException('Upload folder does not exist');
+        }
     }
 
     /**

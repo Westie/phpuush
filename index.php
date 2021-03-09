@@ -7,16 +7,16 @@ define('PHAR_MODE', class_exists('Phar') && Phar::running());
 
 if (!defined('APP_DIR')) {
     if (PHAR_MODE) {
-        define('APP_DIR', realpath(getcwd() . '/app') . '/');
-        define('APP_VENDOR_DIR', 'phar://' . basename(__DIR__) . '/app/vendor/');
+        define('APP_DIR', realpath(getcwd() . '/app'));
+        define('APP_VENDOR_DIR', 'phar://' . basename(__DIR__) . '/app/vendor');
     } else {
-        define('APP_DIR', realpath(__DIR__ . '/app') . '/');
-        define('APP_VENDOR_DIR', realpath(APP_DIR . '/vendor') . '/');
+        define('APP_DIR', realpath(__DIR__ . '/app'));
+        define('APP_VENDOR_DIR', realpath(APP_DIR . '/vendor'));
     }
 }
 
 // require composer
-require APP_VENDOR_DIR . 'autoload.php';
+require APP_VENDOR_DIR . '/autoload.php';
 
 use League\Container\Container;
 use Psr\Http\Message\ResponseInterface as Response;

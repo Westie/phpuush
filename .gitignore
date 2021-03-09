@@ -4,3 +4,4 @@ app/databases/phpuush.db
 app/uploads/
 app/vendor/
 phpuush.phar
+.env

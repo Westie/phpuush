@@ -22,10 +22,12 @@ trait Expiration
             return (new DateTime('+1 year'))->setTimezone($tz);
         }
 
-        if (substr($interval, 0, 1) === 'P') {
-            $interval = new DateInterval($interval);
-        } else {
-            $interval = DateInterval::createFromDateString($interval);
+        if ($interval instanceof DateInterval === false) {
+            if (substr($interval, 0, 1) === 'P') {
+                $interval = new DateInterval($interval);
+            } else {
+                $interval = DateInterval::createFromDateString($interval);
+            }
         }
 
         return DateTime::createFromFormat('U', $file['timestamp'])->add($interval)->setTimezone($tz);
