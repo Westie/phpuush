@@ -15,8 +15,8 @@ class Configuration
     {
         // read legacy config (if it exists)
         if (empty($this->data) && empty($_ENV['PHPUUSH_IGNORE_CONFIG_FILE'])) {
-            if (file_exists(APP_DIR . 'configuration.php')) {
-                $this->data = $this->readLegacyConfigurationFile(APP_DIR . 'configuration.php');
+            if (file_exists(APP_DIR . '/configuration.php')) {
+                $this->data = $this->readLegacyConfigurationFile(APP_DIR . '/configuration.php');
             }
         }
 
