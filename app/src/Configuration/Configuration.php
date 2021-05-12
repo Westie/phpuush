@@ -43,7 +43,7 @@ class Configuration
      */
     private function readLegacyConfigurationFile(string $fileName): array
     {
-        return (static function() use ($fileName) {
+        return (static function () use ($fileName) {
             $returnedValue = require $fileName;
 
             if (is_array($returnedValue)) {

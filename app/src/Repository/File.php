@@ -236,6 +236,6 @@ class File
             if (!count($result)) {
                 return $alias;
             }
-        } while(true);
+        } while (true);
     }
 }

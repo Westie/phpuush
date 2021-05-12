@@ -35,7 +35,7 @@ class Api
 
     /**
      *  Authentication
-     *  
+     *
      *   - Request:
      *      + e = email address
      *      + p = password
@@ -258,9 +258,9 @@ class Api
         if ($sourceWidth > $thumbBoundaries['width'] || $sourceHeight > $thumbBoundaries['height']) {
             $scaler = 1;
 
-            if($sourceWidth > $sourceHeight) {
+            if ($sourceWidth > $sourceHeight) {
                 $scaler = $thumbBoundaries['width'] / $sourceWidth;
-            } elseif($sourceWidth < $sourceHeight) {
+            } elseif ($sourceWidth < $sourceHeight) {
                 $scaler = $thumbBoundaries['height'] / $sourceHeight;
             }
 

@@ -32,8 +32,8 @@ $container->addServiceProvider(App\ServiceProvider::class);
 $app = AppFactory::createFromContainer($container);
 
 $app->any('/dl', function (Request $request, Response $response, array $arguments) {
-	$response->getBody()->write('85');
-	return $response;
+    $response->getBody()->write('85');
+    return $response;
 });
 
 $app->any('/', function (Request $request, Response $response, array $arguments) {
