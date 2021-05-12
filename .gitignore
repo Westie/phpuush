@@ -5,3 +5,4 @@ app/uploads/
 app/vendor/
 phpuush.phar
 .env
+.php_cs.cache
