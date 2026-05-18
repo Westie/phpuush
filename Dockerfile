@@ -1,7 +1,10 @@
 FROM php:7.4-fpm AS builder
 
 COPY --from=composer/composer:latest-bin /composer /usr/local/bin/composer
-COPY . /opt/phpuush
+COPY ./app /opt/phpuush/app
+COPY ./composer.json /opt/phpuush/composer.json
+COPY ./composer.lock /opt/phpuush/composer.lock
+COPY ./index.php /opt/phpuush/index.php
 RUN composer install --working-dir /opt/phpuush --no-dev
 
 # --------------------------------------- #

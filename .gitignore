@@ -1,8 +1,9 @@
 .DS_Store
+.env
+.php_cs.cache
 app/configuration.php
 app/databases/phpuush.db
 app/uploads/
 app/vendor/
+data
 phpuush.phar
-.env
-.php_cs.cache
