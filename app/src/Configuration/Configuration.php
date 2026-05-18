@@ -91,6 +91,9 @@ class Configuration
         if (!empty($_ENV['PHPUUSH_FILES_UPLOAD'])) {
             $data['files']['upload'] = $_ENV['PHPUUSH_FILES_UPLOAD'];
         }
+        if (!empty($_ENV['PHPUUSH_ALIAS_LENGTH'])) {
+            $data['alias']['length'] = $_ENV['PHPUUSH_ALIAS_LENGTH'];
+        }
 
         return $data;
     }

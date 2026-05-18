@@ -1,0 +1,10 @@
+services:
+  phpuush:
+    build:
+      target: web
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8040:80
+    volumes:
+      - ./data:/opt/phpuush-data:rw
