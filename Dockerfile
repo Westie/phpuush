@@ -1,5 +1,9 @@
 FROM php:7.4-fpm AS builder
 
+RUN apt-get update && \
+    apt-get install -y zip unzip && \
+    apt-get clean
+
 COPY --from=composer/composer:latest-bin /composer /usr/local/bin/composer
 COPY ./app /opt/phpuush/app
 COPY ./composer.json /opt/phpuush/composer.json
